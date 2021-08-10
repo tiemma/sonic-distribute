@@ -1,0 +1,45 @@
+{
+  "name": "sonic-dr",
+  "version": "1.0.0",
+  "engines": {
+    "node": "<16"
+  },
+  "engineStrict": true,
+  "description": "Accelerate your DB backup and restore processes",
+  "main": "index.js",
+  "scripts": {
+    "lint-fix": "eslint -c .eslintrc.js --fix --ext .ts --ext .js src/",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "db",
+    "relational",
+    "graphs",
+    "logical dumps"
+  ],
+  "author": "Emmanuel Bakare",
+  "license": "ISC",
+  "dependencies": {
+    "@tiemma/sonic-core": "^1.0.10",
+    "mysql2": "^2.2.5",
+    "pg": "^8.7.1",
+    "pg-hstore": "^2.3.4",
+    "postgres-array": "^2.0.0",
+    "sequelize": "^6.6.5",
+    "sqlite3": "^4.2.0"
+  },
+  "devDependencies": {
+    "@types/sequelize": "^4.28.10",
+    "@typescript-eslint/eslint-plugin": "^4.29.1",
+    "@typescript-eslint/parser": "^4.29.1",
+    "eslint": "^7.32.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-import": "^2.24.0",
+    "eslint-plugin-prettier": "^3.4.0",
+    "sequelize-cli": "^6.2.0",
+    "ts-node": "^10.1.0",
+    "tsconfig-paths": "^3.10.1",
+    "tslib": "^2.3.0",
+    "typescript": "^4.3.5"
+  }
+}
