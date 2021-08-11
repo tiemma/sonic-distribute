@@ -1,4 +1,4 @@
-import { promises } from "fs";
+import { opendirSync, readdirSync, readFileSync, Dirent } from "fs";
 import { expect, use } from "chai";
 import deepEqualInAnyOrder from "deep-equal-in-any-order";
 import { Queue } from "@tiemma/sonic-core";
@@ -54,16 +54,17 @@ const response = {
 
 const masterFn = async (workerQueue: Queue, args: any) => {
   const { dirPath } = args;
-  const dir = await promises.opendir(dirPath);
+  // Work around opendirSync not being in node 10 for regression tests
+  const dir = (opendirSync||readdirSync)(dirPath);
   for await (const file of dir) {
-    await Map(workerQueue, { data: file.name });
+    await Map(workerQueue, { data: (file as Dirent).name });
   }
 };
 
 const workerFn = async (event: MapReduceEvent, args: any) => {
   const { dirPath } = args;
   const fileName = event.data;
-  const file = await promises.readFile(`${dirPath}/${fileName}`, {
+  const file = await readFileSync(`${dirPath}/${fileName}`, {
     encoding: "utf-8",
   });
 
