@@ -101,13 +101,7 @@ export const configureWorkers = async (numWorkers: number) => {
 
 export const initMaster = async (args: any) => {
   (cluster.setupMaster || cluster.setupPrimary)({
-    execArgv: [
-      "-r",
-      "tsconfig-paths/register",
-      "-r",
-      "ts-node/register",
-      "--async-stack-traces",
-    ],
+    execArgv: ["-r", "tsconfig-paths/register", "-r", "ts-node/register"],
   } as ClusterSettings);
 
   logger("Running Map reduce");
