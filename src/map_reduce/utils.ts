@@ -3,9 +3,9 @@ import cluster, { ClusterSettings } from "cluster";
 import { pid } from "process";
 import { Queue } from "@tiemma/sonic-core";
 
-export type MasterFn = (queue: Queue, args: any) => any;
+export type MasterFn = (workerQueue: Queue, args: any) => any;
 export type WorkerFn = (event: MapReduceEvent, args: any) => any;
-export type ReduceFn = (queue: Queue) => any;
+export type ReduceFn = (resultQueue: Queue) => any;
 
 export const NUM_CPUS = cpus().length;
 
@@ -27,6 +27,7 @@ export const getLogger =
   (loggerID: string) =>
   (message: any, date = new Date().toISOString()) => {
     if (process.env["QUIET"]) return;
+    // eslint-disable-next-line no-console
     console.log(`${date}: ${loggerID}: ${message}`);
   };
 const logger = getLogger(getWorkerName());
@@ -133,7 +134,7 @@ export const initWorkers = async (workerFn: any, args: any) => {
       return;
     }
 
-    const data = await workerFn(event.data, {
+    const data = await workerFn(event, {
       ...args,
       workerID: cluster.worker.id,
     });

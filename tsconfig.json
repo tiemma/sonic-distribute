@@ -9,15 +9,16 @@
     "outDir": "build",
     "removeComments": true,
     "target": "es6",
-    "module": "CommonJS",
+    "module": "commonjs",
     "moduleResolution": "node",
     "lib": ["es2019", "dom"],
-    "types": ["node"],
-    "typeRoots": ["./@types", "node_modules/@types"],
-//    "noUnusedLocals": true,
+    "types": ["node", "mocha"],
+    "typeRoots": ["node_modules/@types"],
+    "noUnusedLocals": true,
     "noUnusedParameters": true,
     "resolveJsonModule": true
   },
   "include": [
-    "src/**/*.ts", "test/**/*.ts"]
+    "./src/**/*"
+  ]
 }
