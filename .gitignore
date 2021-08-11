@@ -1,2 +1,4 @@
 node_modules/
-backup/
+build/
+.idea
+.nyc_output

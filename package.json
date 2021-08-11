@@ -1,15 +1,14 @@
 {
-  "name": "sonic-dr",
+  "name": "@tiemma/sonic-distribute",
   "version": "1.0.0",
+  "main": "build/index.js",
   "engines": {
     "node": "<16"
   },
-  "engineStrict": true,
   "description": "Accelerate your DB backup and restore processes",
-  "main": "index.js",
   "scripts": {
     "lint-fix": "eslint -c .eslintrc.js --fix --ext .ts --ext .js src/",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "nyc --reporter=text-summary mocha -r ts-node/register test/*.spec.ts"
   },
   "keywords": [
     "db",
@@ -20,22 +19,26 @@
   "author": "Emmanuel Bakare",
   "license": "ISC",
   "dependencies": {
-    "@tiemma/sonic-core": "^1.0.10",
-    "mysql2": "^2.2.5",
-    "pg": "^8.7.1",
-    "pg-hstore": "^2.3.4",
-    "postgres-array": "^2.0.0",
-    "sequelize": "^6.6.5",
-    "sqlite3": "^4.2.0"
+    "@tiemma/sonic-core": "^1.0.11"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tiemma/sonic-distribute"
   },
   "devDependencies": {
+    "@types/mocha": "^9.0.0",
     "@types/sequelize": "^4.28.10",
     "@typescript-eslint/eslint-plugin": "^4.29.1",
     "@typescript-eslint/parser": "^4.29.1",
+    "chai": "^4.3.4",
+    "deep-equal-in-any-order": "^1.1.10",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-import": "^2.24.0",
     "eslint-plugin-prettier": "^3.4.0",
+    "mocha": "^9.0.3",
+    "nyc": "^15.1.0",
+    "openapi-types": "^7.2.3",
     "sequelize-cli": "^6.2.0",
     "ts-node": "^10.1.0",
     "tsconfig-paths": "^3.10.1",
