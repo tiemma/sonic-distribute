@@ -1,9 +1,11 @@
 import cluster from "cluster";
 import {
+  Delay,
   initMaster,
   initWorkers,
   isMaster,
   MasterFn,
+  NUM_CPUS,
   ReduceFn,
   shutdown,
   WorkerFn,
@@ -11,19 +13,25 @@ import {
 
 export const MapReduce = async (
   masterFn: MasterFn,
-  workerFn: WorkerFn,
+  workerFns: WorkerFn[],
   reduceFn: ReduceFn,
   args: any
 ) => {
   if (isMaster()) {
-    const { workerQueue, processOrder } = await initMaster(args);
+    const { numWorkers = NUM_CPUS } = args;
+    const { workerQueue, processOrder, failedOrder } = await initMaster(
+      numWorkers
+    );
 
     await masterFn(workerQueue, args);
+    while (workerQueue.getElements().length !== numWorkers) {
+      await Delay(1000);
+    }
 
     await shutdown();
 
-    return reduceFn(processOrder);
+    return reduceFn(processOrder, failedOrder);
   } else if (cluster.isWorker) {
-    await initWorkers(workerFn, args);
+    await initWorkers(workerFns, args);
   }
 };

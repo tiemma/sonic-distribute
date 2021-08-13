@@ -5,7 +5,7 @@ import { Queue } from "@tiemma/sonic-core";
 
 export type MasterFn = (workerQueue: Queue, args: any) => any;
 export type WorkerFn = (event: MapReduceEvent, args: any) => any;
-export type ReduceFn = (resultQueue: Queue) => any;
+export type ReduceFn = (resultQueue: Queue, failedQueue: Queue) => any;
 
 export const NUM_CPUS = cpus().length;
 
@@ -52,6 +52,8 @@ export const getWorkerID = async (workerQueue: Queue) => {
 
 export interface MapReduceEvent {
   data: any;
+  response?: any;
+  failed?: boolean;
 
   //  Internal, not to be directly used
   id?: number;
@@ -63,12 +65,13 @@ export interface MapReduceEvent {
 export const configureWorkers = async (numWorkers: number) => {
   const workerQueue = new Queue();
   const processOrder = new Queue();
+  const failedOrder = new Queue();
 
   for (let i = 0; i < numWorkers; i++) {
     const worker = cluster.fork();
 
     worker.on(clusterEvents.MESSAGE, (message: MapReduceEvent) => {
-      const { id, SYN, SYN_ACK, data } = message;
+      const { id, SYN, SYN_ACK, response, failed } = message;
 
       logger(`Received events from worker: ${JSON.stringify(message)}`);
 
@@ -80,7 +83,9 @@ export const configureWorkers = async (numWorkers: number) => {
         logger(`Worker ${worker.id} now available`);
       }
 
-      if (data) {
+      if (failed) {
+        failedOrder.enqueue(message);
+      } else if (response) {
         processOrder.enqueue(message);
       }
     });
@@ -96,10 +101,10 @@ export const configureWorkers = async (numWorkers: number) => {
   }
   logger(`Workers queue populated`);
 
-  return { workerQueue, processOrder };
+  return { workerQueue, processOrder, failedOrder };
 };
 
-export const initMaster = async (args: any) => {
+export const initMaster = async (numWorkers: number) => {
   (cluster.setupMaster || cluster.setupPrimary)({
     execArgv: ["-r", "tsconfig-paths/register", "-r", "ts-node/register"],
   } as ClusterSettings);
@@ -107,18 +112,16 @@ export const initMaster = async (args: any) => {
   logger("Running Map reduce");
   logger(`Process running on pid ${pid}`);
 
-  const { numWorkers = NUM_CPUS } = args;
-
   return configureWorkers(numWorkers);
 };
 
-export const initWorkers = async (workerFn: any, args: any) => {
+export const initWorkers = async (workerFns: WorkerFn[], args: any) => {
   const logger = getLogger(getWorkerName());
 
   // Register worker on startup
   process.send({ SYN: true });
 
-  process.on(clusterEvents.MESSAGE, async (event) => {
+  process.on(clusterEvents.MESSAGE, async (event: MapReduceEvent) => {
     // Establish master-node communication with 3-way handshake
     if (event.ACK) {
       logger(`Worker ${cluster.worker.id} now active and processing requests`);
@@ -128,11 +131,25 @@ export const initWorkers = async (workerFn: any, args: any) => {
       return;
     }
 
-    const data = await workerFn(event, {
-      ...args,
-      workerID: cluster.worker.id,
-    });
-    const res = { id: cluster.worker.id, data };
+    const res = { id: cluster.worker.id, data: event.data };
+    try {
+      let response = event.data;
+
+      for (let i = 0; i < workerFns.length; i++) {
+        response = await workerFns[i](
+          { data: response },
+          {
+            ...args,
+            workerID: cluster.worker.id,
+          }
+        );
+      }
+      res["response"] = response;
+    } catch (e) {
+      logger(`Error occurred: ${e}`);
+      res["failed"] = true;
+    }
+
     logger(`Writing event ${JSON.stringify(res)} to master`);
 
     process.send(res);

@@ -47,7 +47,8 @@ Then proceed to import and call the MapReduce method as desired
 import {MapReduce} from "@tiemma/sonic-distribute";
 
 //...describe masterFn, workerFn and reduceFn methods
-const data = await MapReduce(masterFn, workerFn, reduceFn, { data: ....anything, numWorkers: desired_number_of_workers})
+// the workerFns are pipelined ... event.data -> workerFn[0] -> workerFn[1] ... workerFn[n-1] -> response
+const response = await MapReduce(masterFn, [workerFn], reduceFn, { response: ....anything, numWorkers: desired_number_of_workers})
 ```
 
 > NOTE: The arg numWorkers is reserved to specify the desired number of workers to deploy
@@ -59,9 +60,9 @@ Due to the nature of the fork, you would be required to access the output of the
 import {MapReduce, isMaster()} from "@tiemma/sonic-distribute";
 
 //...describe masterFn, workerFn and reduceFn methods
-const data = await MapReduce(masterFn, workerFn, reduceFn, { data: ....anything, numWorkers: desired_number_of_workers})
+const response = await MapReduce(masterFn, [workerFn], reduceFn, { response: ....anything, numWorkers: desired_number_of_workers})
 if(isMaster()) {
-    //....process data output of map reduce
+    //....process response output of map reduce
 }
 ```
 
@@ -94,20 +95,9 @@ If you have some method by which it can be simply implemented here, do create a 
 
 # Future Plans
 
-## Pipelining worker jobs
-
-Currently, sonic < distribute > supports just one worker and reduce job.
-
-The plan is to optimize to build pipeline worthy execution stages in the worker and reduce stage respectively.
-
-At the moment, your only hope is to write everything in one workerFn and reduceFn.
-
-If you have some method by which it can be simply implemented here, do create a PR using the ISSUE TEMPLATE [here](./.github/ISSUE_TEMPLATE/feature_request.md).
-
-
 ## Multi-master and tagged worker setups
 
-There might be a case to run multiple masters and also support pushing jobs to certain tagged workers with various workerFns based on the pipeline workers job feature described above.
+There might be a case to run multiple masters and  support pushing jobs to certain tagged workers with various workerFns based on the pipeline workers job feature described above.
 
 This is an async pipeline and would be effectively represented by DAGs with various logic for traversing across job in either the worker or reduce stage and across those stages respectively.
 

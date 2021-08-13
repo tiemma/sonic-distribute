@@ -13,43 +13,43 @@ import {
 use(deepEqualInAnyOrder);
 
 const response = {
-  Orchards: 1,
-  seemed: 1,
-  like: 1,
-  a: 1,
-  frivolous: 1,
-  crop: 1,
-  when: 1,
-  so: 1,
-  many: 1,
-  people: 1,
-  needed: 1,
-  food: 2,
-  The: 2,
-  golden: 1,
-  retriever: 1,
-  loved: 1,
-  the: 4,
-  fireworks: 1,
-  each: 1,
-  Fourth: 1,
-  of: 3,
-  July: 1,
-  skeleton: 1,
-  had: 1,
-  skeletons: 1,
-  his: 1,
-  own: 1,
-  in: 1,
-  closet: 1,
-  They: 1,
-  did: 1,
-  nothing: 1,
-  as: 1,
-  raccoon: 1,
-  attacked: 1,
-  "lady’s": 1,
-  bag: 1,
+  Orchards: 2,
+  seemed: 2,
+  like: 2,
+  a: 2,
+  frivolous: 2,
+  crop: 2,
+  when: 2,
+  so: 2,
+  many: 2,
+  people: 2,
+  needed: 2,
+  food: 4,
+  The: 4,
+  golden: 2,
+  retriever: 2,
+  loved: 2,
+  the: 8,
+  fireworks: 2,
+  each: 2,
+  Fourth: 2,
+  of: 6,
+  July: 2,
+  skeleton: 2,
+  had: 2,
+  skeletons: 2,
+  his: 2,
+  own: 2,
+  in: 2,
+  closet: 2,
+  They: 2,
+  did: 2,
+  nothing: 2,
+  as: 2,
+  raccoon: 2,
+  attacked: 2,
+  'lady’s': 2,
+  bag: 2
 };
 
 const masterFn = async (workerQueue: Queue, args: any) => {
@@ -61,7 +61,7 @@ const masterFn = async (workerQueue: Queue, args: any) => {
   }
 };
 
-const workerFn = async (event: MapReduceEvent, args: any) => {
+const workerFn1 = async (event: MapReduceEvent, args: any) => {
   const { dirPath } = args;
   const fileName = event.data;
   const file = await readFileSync(`${dirPath}/${fileName}`, {
@@ -79,11 +79,21 @@ const workerFn = async (event: MapReduceEvent, args: any) => {
   return wordCount;
 };
 
+const workerFn2 = (event: MapReduceEvent, _: any) => {
+  // double everything
+  const wordCount: Record<string, number> = event.data
+  for(const key of Object.keys(wordCount)) {
+    wordCount[key] *= 2
+  }
+
+  return wordCount
+}
+
 const reduceFn = (queue: Queue) => {
   const wordCounts: Record<string, number> = {};
   while (!queue.isEmpty()) {
     const wordCount = queue.dequeue();
-    for (const [word, count] of Object.entries(wordCount.data)) {
+    for (const [word, count] of Object.entries(wordCount.response)) {
       if (!wordCounts[word]) {
         wordCounts[word] = 0;
       }
@@ -99,7 +109,7 @@ describe(`Map reduce - ${getWorkerName()}`, () => {
     // defer printing logs
     process.env["QUIET"] = "true";
 
-    const data = await MapReduce(masterFn, workerFn, reduceFn, {
+    const data = await MapReduce(masterFn, [workerFn1, workerFn2], reduceFn, {
       dirPath: `${process.cwd()}/test/fixtures`,
       numWorkers: 1,
     });
