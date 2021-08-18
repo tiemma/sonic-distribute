@@ -11,7 +11,7 @@ import {
   WorkerFn,
 } from "./utils";
 
-export const MapReduce = async (
+const MapReduce = async (
   masterFn: MasterFn,
   workerFns: WorkerFn[],
   reduceFn: ReduceFn,
@@ -28,10 +28,12 @@ export const MapReduce = async (
       await Delay(1000);
     }
 
-    await shutdown();
+    await shutdown(numWorkers);
 
     return reduceFn(processOrder, failedOrder);
   } else if (cluster.isWorker) {
     await initWorkers(workerFns, args);
   }
 };
+
+export const sonicDistribute = MapReduce;

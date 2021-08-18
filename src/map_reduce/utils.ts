@@ -73,8 +73,6 @@ export const configureWorkers = async (numWorkers: number) => {
     worker.on(clusterEvents.MESSAGE, (message: MapReduceEvent) => {
       const { id, SYN, SYN_ACK, response, failed } = message;
 
-      logger(`Received events from worker: ${JSON.stringify(message)}`);
-
       if (SYN) {
         // Return signal to worker to start processing
         worker.send({ ACK: true });
@@ -150,14 +148,12 @@ export const initWorkers = async (workerFns: WorkerFn[], args: any) => {
       res["failed"] = true;
     }
 
-    logger(`Writing event ${JSON.stringify(res)} to master`);
-
     process.send(res);
   });
 };
 
-export const shutdown = async () => {
-  for (let i = 0; i < NUM_CPUS; i++) {
+export const shutdown = async (numWorkers: number) => {
+  for (let i = 0; i <= numWorkers; i++) {
     if (cluster.workers[i]) {
       await Delay(100);
       cluster.workers[i].disconnect();
@@ -169,8 +165,6 @@ export const shutdown = async () => {
 
 export const Map = async (workerQueue: Queue, event: MapReduceEvent) => {
   const workerID = await getWorkerID(workerQueue);
-
-  logger(`Sending event ${JSON.stringify(event)} to worker ${workerID}`);
 
   cluster.workers[workerID].send(event);
 };
