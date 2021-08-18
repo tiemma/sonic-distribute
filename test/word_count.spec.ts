@@ -6,7 +6,7 @@ import {
   getWorkerName,
   isMaster,
   Map,
-  MapReduce,
+  sonicDistribute,
   MapReduceEvent,
 } from "../src";
 
@@ -48,14 +48,14 @@ const response = {
   as: 2,
   raccoon: 2,
   attacked: 2,
-  'lady’s': 2,
-  bag: 2
+  "lady’s": 2,
+  bag: 2,
 };
 
 const masterFn = async (workerQueue: Queue, args: any) => {
   const { dirPath } = args;
   // Work around opendirSync not being in node 10 for regression tests
-  const dir = (opendirSync||readdirSync)(dirPath);
+  const dir = (opendirSync || readdirSync)(dirPath);
   for await (const file of dir) {
     await Map(workerQueue, { data: (file as Dirent).name });
   }
@@ -81,13 +81,13 @@ const workerFn1 = async (event: MapReduceEvent, args: any) => {
 
 const workerFn2 = (event: MapReduceEvent, _: any) => {
   // double everything
-  const wordCount: Record<string, number> = event.data
-  for(const key of Object.keys(wordCount)) {
-    wordCount[key] *= 2
+  const wordCount: Record<string, number> = event.data;
+  for (const key of Object.keys(wordCount)) {
+    wordCount[key] *= 2;
   }
 
-  return wordCount
-}
+  return wordCount;
+};
 
 const reduceFn = (queue: Queue) => {
   const wordCounts: Record<string, number> = {};
@@ -109,10 +109,15 @@ describe(`Map reduce - ${getWorkerName()}`, () => {
     // defer printing logs
     process.env["QUIET"] = "true";
 
-    const data = await MapReduce(masterFn, [workerFn1, workerFn2], reduceFn, {
-      dirPath: `${process.cwd()}/test/fixtures`,
-      numWorkers: 1,
-    });
+    const data = await sonicDistribute(
+      masterFn,
+      [workerFn1, workerFn2],
+      reduceFn,
+      {
+        dirPath: `${process.cwd()}/test/fixtures`,
+        numWorkers: 1,
+      }
+    );
 
     if (isMaster()) {
       expect(data).deep.equal(response);
