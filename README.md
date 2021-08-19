@@ -37,7 +37,7 @@ Note the signatures of the methods during your implementation
 ```typescript
 export type MasterFn = (workerQueue: Queue, args: any) => any;
 export type WorkerFn = (event: MapReduceEvent, args: any) => any;
-export type ReduceFn = (resultQueue: Queue) => any;
+export type ReduceFn = (resultQueue: Queue, failedQueue: Queue) => any;
 ```
 
 ## Call the MapReduce method with the functions and a set of args
